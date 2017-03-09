@@ -7,7 +7,7 @@
  *
  */
 
- global $seed, $alias, $roll_template, $sum_template, $separator_template, $offset_template;
+ global $seed, $alias;
  $seed = 1;     // seed used for RNG -- fallback to 1 if cannot fetch post ID
 
 // Disallow direct access to this file for security reasons
@@ -36,7 +36,7 @@ function diceroller_install() {
     global $db, $mybb;
 
     // Add templates
-	$diceroller = 'Rolling $alias {$dice}: $rolls $offset $sum $results';
+	$diceroller = 'Rolling $alias {$dice}: $rolls $offset $sum $results $resources';
     $diceroller_roll = '{$roll} {$plus}';
     $diceroller_offset = '{$offset}';
     $diceroller_sum = '= {$sum}';
@@ -157,7 +157,8 @@ function diceroller_install() {
             'description' => 'Ranges in format <i>low</i>-<i>high</i> that
             indicate when to display each custom message.
             Separate messages with commas and rolls with line breaks, e.g.
-            <br />1d20=1-1,2-10,11-19,20-20 (rolling 1 will display "Crit Fail", rolling between 2-10 will display "Fail", etc.)
+            <br />1d20=1-1,2-10,11-19,20-20 (rolling 1 will display "Crit Fail",
+            rolling between 2-10 will display "Fail", etc.)
             <br />strength=1-5,6-10,11-15,16-20
             <br />agility=1-25,26-50,51-75,76-100',
             'optionscode' => 'textarea',
@@ -173,6 +174,17 @@ function diceroller_install() {
             'optionscode' => 'textarea',
             'value' => '',
             'disporder' => 5
+        ),
+        'remove_dice' => array(
+            'title' => 'Remove Dice From Pool',
+            'description' => 'Remove value from dice pool so it cannot be landed
+            on again. List rolls or aliases you want to turn this setting on for,
+            separated by line breaks, e.g.
+            <br />carddraw
+            <br />1d20',
+            'optionscode' => 'textarea',
+            'value' => '',
+            'disporder' => 6
         )
     );
 
@@ -192,11 +204,12 @@ function diceroller_uninstall() {
 
     // Delete template
 	$db->delete_query("templates", "title IN ('diceroller', 'diceroller_roll',
-        'diceroller_offset', 'diceroller_sum', 'diceroller_result', 'diceroller_alias')");
+        'diceroller_offset', 'diceroller_sum', 'diceroller_result', 'diceroller_alias',
+        'diceroller_resource')");
 
     // Delete settings and settings group
     $db->delete_query('settings', "name IN ('enable_sum', 'aliases',
-        'result_messages', 'result_ranges')");
+        'result_messages', 'result_ranges, remove_dice')");
     $db->delete_query('settinggroups', "name = 'dicerollergroup'");
 
     // Don't forget this
@@ -258,6 +271,9 @@ function parse_lowhigh_callback($matches) {
 	$offset = $matches[4];
 	$dice = $low . '-' . $high . $offset;
 
+    $key = $alias ? $alias : $dice;
+    $resourcelist = explode(',', get_setting_value('resources', $key));
+
 	$roll = rand(intval($low), intval($high));
 
     // Calculate sum
@@ -267,6 +283,10 @@ function parse_lowhigh_callback($matches) {
         }
 	}
 
+    // Get resource items
+    $resource = $resourcelist[$roll-1];
+    eval('$resources .= "' . $templates->get('diceroller_resource') . '";');
+
     // Get result messages
     $key = $alias ? $alias : $dice;
     $number = $sum ? $sum : $roll;
@@ -275,7 +295,7 @@ function parse_lowhigh_callback($matches) {
         eval('$results .= "' . $templates->get('diceroller_result') . '";');
     }
 
-    if ($sum) eval('$sum  = "' . $templates->get('diceroller_sum') . '";');
+    if ($sum != null) eval('$sum  = "' . $templates->get('diceroller_sum') . '";');
     eval('$offset  = "' . $templates->get('diceroller_offset') . '";');
     eval('$rolls .= "' . $templates->get('diceroller_roll') . '";');
 	eval('$diceroller = "' . $templates->get('diceroller') . '";');
@@ -286,7 +306,7 @@ function parse_lowhigh_callback($matches) {
  * Rolls dice for NdS format and evaluates templates.
  */
 function parse_nds_callback($matches) {
-	global $mybb, $templates, $seed, $alias, $roll_template, $sum_template, $separator_template, $offset_template;
+	global $mybb, $templates, $seed, $alias;
 
     $dosum = $mybb->settings['enable_sum'];
 
@@ -296,6 +316,10 @@ function parse_nds_callback($matches) {
 	$offset = $matches[4];
 	$dice = $number . 'd' . $sides . $offset;
 
+    $key = $alias ? $alias : $dice;
+    $resourcelist = explode(',', get_setting_value('resources', $key));
+    $remove_dice = explode("\n", $mybb->settings['remove_dice']);
+
     // Default number to 1
 	if (!$number) $number = 1;
 
@@ -303,6 +327,12 @@ function parse_nds_callback($matches) {
 	$rolled = array();
 	for ($i = 0; $i < $number; $i++) {
         $roll = rand(1, intval($sides));
+        if ($remove_dice and $number <= $sides) {
+            while (in_array($roll, $rolled)) {
+                $roll = rand(1, intval($sides));
+            }
+        }
+
 		$rolled[] = $roll;
 
         if ($i < $number-1) {
@@ -310,6 +340,11 @@ function parse_nds_callback($matches) {
         } else {
             $plus = '';
         }
+
+        // Get resource items
+        $resource = $resourcelist[$roll-1];
+        eval('$resources .= "' . $templates->get('diceroller_resource') . '";');
+        eval('$rolls .= "' . $templates->get('diceroller_roll') . '";');
 	}
 
     // Calculate sum
@@ -324,15 +359,15 @@ function parse_nds_callback($matches) {
     }
 
     // Get result messages
-    $key = $alias ? $alias : $dice;
-    $num = $sum ? $sum : $roll;
+    $num = $sum ? $sum : $rolled[0];
     $resultlist = get_result_message($key, $num);
     foreach ($resultlist as $result) {
         eval('$results .= "' . $templates->get('diceroller_result') . '";');
     }
 
-    if ($sum) eval('$sum  = "' . $templates->get('diceroller_sum') . '";');
-    eval('$rolls .= "' . $templates->get('diceroller_roll') . '";');
+    if ($sum != null) {
+        eval('$sum  = "' . $templates->get('diceroller_sum') . '";');
+    }
     eval('$offset  = "' . $templates->get('diceroller_offset') . '";');
 	eval('$diceroller  = "' . $templates->get('diceroller') . '";');
 	return $diceroller;
@@ -342,13 +377,16 @@ function parse_nds_callback($matches) {
  * Rolls dice for weighted format and evaluates templates.
  */
 function parse_weighted_callback($matches) {
-	global $templates, $seed, $alias, $roll_template, $sum_template, $separator_template, $offset_template;
+	global $templates, $seed, $alias;
 
     $dosum = $mybb->settings['enable_sum'];
 
     // Fetch information from matches and convert to array
 	$dice = $matches[2];
 	$weights = explode(',', $dice);
+
+    $key = $alias ? $alias : $dice;
+    $resourcelist = explode(',', get_setting_value('resources', $key));
 
     // Roll weighted die
 	$roll = weighted_rng($weights);
@@ -359,6 +397,10 @@ function parse_weighted_callback($matches) {
     foreach ($resultlist as $result) {
         eval('$results .= "' . $templates->get('diceroller_result') . '";');
     }
+
+    // Get resource items
+    $resource = $resourcelist[$roll-1];
+    eval('$resources .= "' . $templates->get('diceroller_resource') . '";');
 
     eval('$rolls .= "' . $templates->get('diceroller_roll') . '";');
 	eval('$diceroller  = "' . $templates->get('diceroller') . '";');
@@ -387,6 +429,10 @@ function parse_alias_callback($matches) {
 
     $alias = $matches[2];
     $dice = get_setting_value('aliases', $alias);
+    if (!$dice) {
+        $alias = null;
+        return "Alias does not exist.";
+    }
 
     $alias_patterns = array(
 		// alias=low-high | e.g. alias=1-6
@@ -416,7 +462,7 @@ function parse_alias_callback($matches) {
  * @param  boolean $inner_explode       Whether the right hand side should also be exploded.
  * @return array                        Array of items in the setting.
  */
-function explode_settings($name, $inner_explode) {
+function explode_settings($name) {
     global $mybb;
 
     $settings = $mybb->settings[$name];
@@ -462,7 +508,7 @@ function in_range($number, $min, $max) {
  * Checks if $value is a key in setting $name
  */
 function get_setting_value($name, $value) {
-    $setting = explode_settings($name, false);
+    $setting = explode_settings($name);
 
     return isset($setting[$value])
         ? $setting[$value]
@@ -470,8 +516,6 @@ function get_setting_value($name, $value) {
 }
 
 function get_result_message($key, $number) {
-    global $templates;
-
     $result_messages = explode(',', get_setting_value('result_messages', $key));
     $result_ranges = get_setting_value('result_ranges', $key);
     $results = array();
