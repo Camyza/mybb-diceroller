@@ -23,7 +23,7 @@ function diceroller_info() {
 	return array(
 		"name"			=> "Dice Roller MyCode",
 		"description"	=> "Rolls dice in a variety of exciting ways.",
-		"website"		=> "",
+		"website"		=> "https://community.mybb.com/mods.php?action=view&pid=955",
 		"author"		=> "Shinka",
 		"authorsite"	=> "",
 		"version"		=> "1.8",
@@ -36,13 +36,13 @@ function diceroller_install() {
     global $db, $mybb;
 
     // Add templates
-	$diceroller = 'Rolling $alias {$dice}: $rolls $offset $sum $results $resources';
+	$diceroller = '<div align="center">Rolling $dalias {$dice}: $rolls $doffset $dsum $results $resources</div>';
     $diceroller_roll = '{$roll} {$plus}';
     $diceroller_offset = '{$offset}';
     $diceroller_sum = '= {$sum}';
-    $diceroller_result = '{$result}';
-    $diceroller_alias = '{$alias}';
-    $diceroller_resource = '{$resource}';
+    $diceroller_result = '<br />{$result}';
+    $diceroller_alias = '<strong>{$alias}</strong>';
+    $diceroller_resource = '<br />{$resource}';
 
 	$diceroller_array = array(
 	    'title' => 'diceroller',
@@ -295,8 +295,8 @@ function parse_lowhigh_callback($matches) {
         eval('$results .= "' . $templates->get('diceroller_result') . '";');
     }
 
-    if ($sum != null) eval('$sum  = "' . $templates->get('diceroller_sum') . '";');
-    eval('$offset  = "' . $templates->get('diceroller_offset') . '";');
+    if ($sum != null) eval('$dsum  = "' . $templates->get('diceroller_sum') . '";');
+    eval('$doffset  = "' . $templates->get('diceroller_offset') . '";');
     eval('$rolls .= "' . $templates->get('diceroller_roll') . '";');
 	eval('$diceroller = "' . $templates->get('diceroller') . '";');
 	return $diceroller;
@@ -366,9 +366,9 @@ function parse_nds_callback($matches) {
     }
 
     if ($sum != null) {
-        eval('$sum  = "' . $templates->get('diceroller_sum') . '";');
+        eval('$dsum  = "' . $templates->get('diceroller_sum') . '";');
     }
-    eval('$offset  = "' . $templates->get('diceroller_offset') . '";');
+    eval('$doffset  = "' . $templates->get('diceroller_offset') . '";');
 	eval('$diceroller  = "' . $templates->get('diceroller') . '";');
 	return $diceroller;
 }
