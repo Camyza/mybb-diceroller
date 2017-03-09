@@ -45,3 +45,9 @@ Roll dice in a variety of exciting ways using MyCode!
   * Rolls a single dice with as many values as there are items in weighted list. Each item in weighted list represents how likely that index is to be selected.
   * e.g. [roll=25,25,50] gives 1 a 25% chance to be rolled, 2 a 25% chance, and 3 a 50% chance.
   * *potential output* - Rolling 25,25,50: 3
+
+## Known Issues
+* Cannot preview rolls.
+  * This is unlikely to be added due to the potential for abuse and incompatibility with current tamper preventions. (The post ID is used as an RNG seed. Previewed posts have no seed!)
+* Cannot quote rolls and maintain their values.
+  * Work in progress!
