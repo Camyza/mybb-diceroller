@@ -26,7 +26,7 @@ function diceroller_info() {
 		"website"		=> "https://community.mybb.com/mods.php?action=view&pid=955",
 		"author"		=> "Shinka",
 		"authorsite"	=> "",
-		"version"		=> "1.8",
+		"version"		=> "1.0",
 		"guid" 			=> "",
 		"compatibility" => "18*"
 	);
