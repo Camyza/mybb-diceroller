@@ -36,7 +36,7 @@ function diceroller_install() {
     global $db, $mybb;
 
     // Add templates
-	$diceroller = '<div align="center">Rolling $dalias {$dice}: $rolls $doffset $dsum $results $resources</div>';
+	$diceroller = '<div align="center">Rolling {$alias} {$dice}: $rolls {$offset} {$sum} $results $resources</div>';
     $diceroller_roll = '{$roll} {$plus}';
     $diceroller_offset = '{$offset}';
     $diceroller_sum = '= {$sum}';
