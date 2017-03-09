@@ -10,6 +10,10 @@ Roll dice in a variety of exciting ways using MyCode!
 * Add unique resource lists to display an item from for each die in a roll
 * Tamper proof! Rolls cannot be edited to abuse RNG or cherry picked.
 
+## Preview
+![Example Roll](http://i.imgur.com/adUxPzw.png)
+![Example Settings](http://i.imgur.com/EYxWrPX.png)
+
 ## Syntax
 * [roll=low-high]
   * Rolls a single dice with values between low and high, inclusive.
