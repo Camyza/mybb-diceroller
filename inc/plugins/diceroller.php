@@ -36,12 +36,10 @@ function diceroller_install() {
     global $db, $mybb;
 
     // Add templates
-	$diceroller = '<div align="center">Rolling {$alias} {$dice}: $rolls {$offset} {$sum} $results $resources</div>';
+    $diceroller = '<div align="center">Rolling <strong>{$alias}</strong> {$dice}: $rolls {$offset} $sum $results $resources</div>';
     $diceroller_roll = '{$roll} {$plus}';
-    $diceroller_offset = '{$offset}';
     $diceroller_sum = '= {$sum}';
     $diceroller_result = '<br />{$result}';
-    $diceroller_alias = '<strong>{$alias}</strong>';
     $diceroller_resource = '<br />{$resource}';
 
 	$diceroller_array = array(
@@ -55,14 +53,6 @@ function diceroller_install() {
 	$diceroller_roll_array = array(
 	    'title' => 'diceroller_roll',
 	    'template' => $db->escape_string($diceroller_roll),
-	    'sid' => '-1',
-	    'version' => '',
-	    'dateline' => time()
-	);
-
-	$diceroller_offset_array = array(
-	    'title' => 'diceroller_offset',
-	    'template' => $db->escape_string($diceroller_offset),
 	    'sid' => '-1',
 	    'version' => '',
 	    'dateline' => time()
@@ -84,14 +74,6 @@ function diceroller_install() {
 	    'dateline' => time()
 	);
 
-	$diceroller_alias_array = array(
-	    'title' => 'diceroller_alias',
-	    'template' => $db->escape_string($diceroller_alias),
-	    'sid' => '-1',
-	    'version' => '',
-	    'dateline' => time()
-	);
-
 	$diceroller_resource_array = array(
 	    'title' => 'diceroller_resource',
 	    'template' => $db->escape_string($diceroller_resource),
@@ -102,10 +84,8 @@ function diceroller_install() {
 
 	$db->insert_query('templates', $diceroller_array);
 	$db->insert_query('templates', $diceroller_roll_array);
-	$db->insert_query('templates', $diceroller_offset_array);
 	$db->insert_query('templates', $diceroller_sum_array);
 	$db->insert_query('templates', $diceroller_result_array);
-	$db->insert_query('templates', $diceroller_alias_array);
 	$db->insert_query('templates', $diceroller_resource_array);
 
     // Add settings group
@@ -204,8 +184,7 @@ function diceroller_uninstall() {
 
     // Delete template
 	$db->delete_query("templates", "title IN ('diceroller', 'diceroller_roll',
-        'diceroller_offset', 'diceroller_sum', 'diceroller_result', 'diceroller_alias',
-        'diceroller_resource')");
+        'diceroller_sum', 'diceroller_result', 'diceroller_resource')");
 
     // Delete settings and settings group
     $db->delete_query('settings', "name IN ('enable_sum', 'aliases',
@@ -272,7 +251,8 @@ function parse_lowhigh_callback($matches) {
 	$dice = $low . '-' . $high . $offset;
 
     $key = $alias ? $alias : $dice;
-    $resourcelist = explode(',', get_setting_value('resources', $key));
+    $resourcesetting = get_setting_value('resources', $key);
+    if ($resourcesetting) $resourcelist = explode(',', $resourcesetting);
 
 	$roll = rand(intval($low), intval($high));
 
@@ -284,8 +264,10 @@ function parse_lowhigh_callback($matches) {
 	}
 
     // Get resource items
-    $resource = $resourcelist[$roll-1];
-    eval('$resources .= "' . $templates->get('diceroller_resource') . '";');
+    if ($resourcelist) {
+        $resource = $resourcelist[$roll-1];
+        eval('$resources .= "' . $templates->get('diceroller_resource') . '";');
+    }
 
     // Get result messages
     $key = $alias ? $alias : $dice;
@@ -295,8 +277,7 @@ function parse_lowhigh_callback($matches) {
         eval('$results .= "' . $templates->get('diceroller_result') . '";');
     }
 
-    if ($sum != null) eval('$dsum  = "' . $templates->get('diceroller_sum') . '";');
-    eval('$doffset  = "' . $templates->get('diceroller_offset') . '";');
+    if ($sum != null) eval('$sum  = "' . $templates->get('diceroller_sum') . '";');
     eval('$rolls .= "' . $templates->get('diceroller_roll') . '";');
 	eval('$diceroller = "' . $templates->get('diceroller') . '";');
 	return $diceroller;
@@ -317,7 +298,8 @@ function parse_nds_callback($matches) {
 	$dice = $number . 'd' . $sides . $offset;
 
     $key = $alias ? $alias : $dice;
-    $resourcelist = explode(',', get_setting_value('resources', $key));
+    $resourcesetting = get_setting_value('resources', $key);
+    if ($resourcesetting) $resourcelist = explode(',', $resourcesetting);
     $remove_dice = explode("\n", $mybb->settings['remove_dice']);
 
     // Default number to 1
@@ -342,8 +324,10 @@ function parse_nds_callback($matches) {
         }
 
         // Get resource items
-        $resource = $resourcelist[$roll-1];
-        eval('$resources .= "' . $templates->get('diceroller_resource') . '";');
+        if ($resourcelist) {
+            $resource = $resourcelist[$roll-1];
+            eval('$resources .= "' . $templates->get('diceroller_resource') . '";');
+        }
         eval('$rolls .= "' . $templates->get('diceroller_roll') . '";');
 	}
 
@@ -366,9 +350,8 @@ function parse_nds_callback($matches) {
     }
 
     if ($sum != null) {
-        eval('$dsum  = "' . $templates->get('diceroller_sum') . '";');
+        eval('$sum  = "' . $templates->get('diceroller_sum') . '";');
     }
-    eval('$doffset  = "' . $templates->get('diceroller_offset') . '";');
 	eval('$diceroller  = "' . $templates->get('diceroller') . '";');
 	return $diceroller;
 }
@@ -386,7 +369,8 @@ function parse_weighted_callback($matches) {
 	$weights = explode(',', $dice);
 
     $key = $alias ? $alias : $dice;
-    $resourcelist = explode(',', get_setting_value('resources', $key));
+    $resourcesetting = get_setting_value('resources', $key);
+    if ($resourcesetting) $resourcelist = explode(',', $resourcesetting);
 
     // Roll weighted die
 	$roll = weighted_rng($weights);
@@ -398,9 +382,10 @@ function parse_weighted_callback($matches) {
         eval('$results .= "' . $templates->get('diceroller_result') . '";');
     }
 
-    // Get resource items
-    $resource = $resourcelist[$roll-1];
-    eval('$resources .= "' . $templates->get('diceroller_resource') . '";');
+    if ($resourcelist) {
+        $resource = $resourcelist[$roll-1];
+        eval('$resources .= "' . $templates->get('diceroller_resource') . '";');
+    }
 
     eval('$rolls .= "' . $templates->get('diceroller_roll') . '";');
 	eval('$diceroller  = "' . $templates->get('diceroller') . '";');
