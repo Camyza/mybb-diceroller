@@ -25,8 +25,8 @@ function diceroller_info() {
 		"description"	=> "Rolls dice in a variety of exciting ways.",
 		"website"		=> "https://community.mybb.com/mods.php?action=view&pid=955",
 		"author"		=> "Shinka",
-		"authorsite"	=> "",
-		"version"		=> "1.0",
+		"authorsite"	=> "https://github.com/kalynrobinson/diceroller",
+		"version"		=> "1.0.1",
 		"guid" 			=> "",
 		"compatibility" => "18*"
 	);
