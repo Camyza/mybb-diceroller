@@ -1,6 +1,12 @@
 # Dice Roller MyCode Plugin for MyBB
 Roll dice in a variety of exciting ways using MyCode!
 
+## Dependencies
+* [PluginLibrary](https://community.mybb.com/mods.php?action=view&pid=573)
+  * Download and transfer `inc/plugins/pluginlibrary.php` to your `inc/plugins folder`.
+  * You do not need to install or activate PluginLibrary.
+  * Dice Roller MyCode uses PluginLibrary to run a new hook in class_parser.php, in order to correctly seed quoted rolls.
+
 ## Features
 * Multiple syntaxes, including low-high, NdS, and weighted lists -- including offsets!
 * Customizable templates for each component
@@ -9,6 +15,8 @@ Roll dice in a variety of exciting ways using MyCode!
 * Add unique result messages and the range of sums at which they display for each roll
 * Add unique resource lists to display an item from for each die in a roll
 * Tamper proof! Rolls cannot be edited to abuse RNG or cherry picked.
+* Quoted rolls retain their original values.
+* Rolls wrapped in code or PHP tags are not parsed.
 
 ## Preview
 ![Example Roll](http://i.imgur.com/adUxPzw.png)
@@ -49,5 +57,3 @@ Roll dice in a variety of exciting ways using MyCode!
 ## Known Issues
 * Cannot preview rolls.
   * This is unlikely to be added due to the potential for abuse and incompatibility with current tamper preventions. (The post ID is used as an RNG seed. Previewed posts have no seed!)
-* Cannot quote rolls and maintain their values.
-  * Work in progress!
