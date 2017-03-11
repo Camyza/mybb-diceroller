@@ -133,7 +133,7 @@ function diceroller_activate() {
                               <br />endurance=1-10
                               <br />agility=25,25,50",
                           "optionscode" => "textarea",
-                          "value" => "strength=1d6+5\nendurance=1-10\nagility=25,25,50"
+                          "value" => "strength=1d6+5\nendurance=1-4\nagility=25,25,50\ncarddraw=1-4"
                       ),
                       "result_messages" => array(
                           "title" => "Result Messages",
@@ -145,7 +145,7 @@ function diceroller_activate() {
                               <br />agility=You faceplanted!?, You tripped..., You have legs, Run like the wind!!!
                               <br />endurance=You're ded, Just a flesh wound, Alright!, Amazing!!!",
                           "optionscode" => "textarea",
-                          "value" => "1d20=Crit Fail, Fail, Success, Crit Success\nstrength=Fumbled!, Missed!, Glancing Blow!, Direct Hit!, Perfect Strike!\nagility=You faceplanted!?, You tripped..., You have legs, Run like the wind!!!\nendurance=You're ded, Just a flesh wound, Alright!, Amazing!!!"
+                          "value" => "1d20=Crit Fail, Fail, Success, Crit Success\nstrength=Fumbled!, Missed!, Glancing Blow!, Direct Hit!, Perfect Strike!\nagility=You faceplanted!?, You tripped..., You have legs, Run like the wind!!!\nendurance=You're ded, Just a flesh wound, Alright!, Amazing!!!\ncarddraw=Awful luck!,Unlucky...,Lucky,Super lucky!!!!"
                       ),
                       "result_ranges" => array(
                           "title" => "Result Ranges",
@@ -157,7 +157,7 @@ function diceroller_activate() {
                               <br />strength=1-5,6-10,11-15,16-20
                               <br />agility=1-25,26-50,51-75,76-100",
                           "optionscode" => "textarea",
-                          "value" => "1d20=1-1,2-10,11-19,20-20\nstrength=1-5,6-10,11-15,16-20\nagility=1-25,26-50,51-75,76-100\nendurance=1-1,2-2,3-3,4-4"
+                          "value" => "1d20=1-1,2-10,11-19,20-20\nstrength=6-6,7-7,8-9,10-10,11-11\nagility=1-1,2-2,3-3\nendurance=1-1,2-2,3-3,4-4\ncarddraw=1-1,2-2,3-3,4-4"
                       ),
                       "resources" => array(
                           "title" => "Resources",
