@@ -349,7 +349,7 @@ function parse_lowhigh_callback($matches) {
 
     // Explode resources setting for given key
     $key = $alias ? $alias : $dice;
-    $resourcesetting = get_setting_value('resources', $key);
+    $resourcesetting = get_setting_value('diceroller_resources', $key);
     if ($resourcesetting) $resourcelist = explode(',', $resourcesetting);
 
 	$roll = rand(intval($low), intval($high));
@@ -398,7 +398,7 @@ function parse_nds_callback($matches) {
 
     // Explode resource setting
     $key = $alias ? $alias : $dice;
-    $resourcesetting = get_setting_value('resources', $key);
+    $resourcesetting = get_setting_value('diceroller_resources', $key);
     if ($resourcesetting) $resourcelist = explode(',', $resourcesetting);
     $remove_dice = explode("\n", $mybb->settings['diceroller_remove_dice']);
 
@@ -473,7 +473,7 @@ function parse_weighted_callback($matches) {
 
     // Explode resource setting for given key
     $key = $alias ? $alias : $dice;
-    $resourcesetting = get_setting_value('resources', $key);
+    $resourcesetting = get_setting_value('diceroller_resources', $key);
     if ($resourcesetting) $resourcelist = explode(',', $resourcesetting);
 
     // Roll weighted die
