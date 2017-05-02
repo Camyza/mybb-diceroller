@@ -48,7 +48,7 @@ function diceroller_info() {
 		"website"		=> "https://community.mybb.com/mods.php?action=view&pid=955",
 		"author"		=> "Shinka",
 		"authorsite"	=> "https://github.com/kalynrobinson/diceroller",
-		"version"		=> "1.0.2",
+		"version"		=> "1.2.0",
 		"guid" 			=> "",
 		"compatibility" => "18*"
 	);
