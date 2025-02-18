@@ -43,35 +43,35 @@ function diceroller_info() {
     global $mybb, $plugins_cache;
 
     $info = array(
-		"name"			=> "Dice Roller MyCode",
-		"description"	=> "Rolls dice in a variety of exciting ways.",
-		"website"		=> "https://community.mybb.com/mods.php?action=view&pid=955",
-		"author"		=> "Shinka",
-		"authorsite"	=> "https://github.com/kalynrobinson/diceroller",
-		"version"		=> "1.2.0",
-		"guid" 			=> "",
-		"compatibility" => "18*"
-	);
+        "name"            => "Dice Roller MyCode",
+        "description"     => "Rolls dice in a variety of exciting ways.",
+        "website"         => "https://community.mybb.com/mods.php?action=view&pid=955",
+        "author"          => "Shinka",
+        "authorsite"      => "https://github.com/kalynrobinson/diceroller",
+        "version"         => "1.2.0",
+        "guid"            => "",
+        "compatibility"   => "18*"
+    );
 
     // Display edit and undo buttons on plugin description.
     if (diceroller_is_installed() && $plugins_cache['active']['diceroller']) {
         global $PL;
         $PL or require_once PLUGINLIBRARY;
 
-        $editurl = $PL->url_append("index.php?module=config-plugins",
-                                   array("diceroller" => "edit",
-                                         "my_post_key" => $mybb->post_code));
-        $undourl = $PL->url_append("index.php",
-                                   array("module" => "config-plugins",
-                                         "diceroller" => "undo",
-                                         "my_post_key" => $mybb->post_code));
-        $editurl = "index.php?module=config-plugins&amp;diceroller=edit&amp;my_post_key=".$mybb->post_code;
-        $undourl = "index.php?module=config-plugins&amp;diceroller=undo&amp;my_post_key=".$mybb->post_code;
-        $info["description"] .= "<br /><a href=\"{$editurl}\">Make edits to class_parser.php</a>";
-        $info["description"] .= " | <a href=\"{$undourl}\">Undo edits to class_parser.php</a>";
+        $editform = '<form action="index.php?module=config-plugins" method="post">'
+            . '<input type="hidden" name="diceroller" value="edit" />'
+            . '<input type="hidden" name="my_post_key" value="' . $mybb->post_code . '" />'
+            . '<input type="submit" value="Make edits to class_parser.php" /></form>';
+
+        $undoform = '<form action="index.php?module=config-plugins" method="post">'
+            . '<input type="hidden" name="diceroller" value="undo" />'
+            . '<input type="hidden" name="my_post_key" value="' . $mybb->post_code . '" />'
+            . '<input type="submit" value="Undo edits to class_parser.php" /></form>';
+
+        $info["description"] .= "<br />{$editform} | {$undoform}";
     }
 
-	return $info;
+    return $info;
 }
 
 function diceroller_install() {
@@ -386,15 +386,15 @@ function parse_lowhigh_callback($matches) {
  * Rolls dice for NdS format and evaluates templates.
  */
 function parse_nds_callback($matches) {
-	global $mybb, $templates, $alias;
+    global $mybb, $templates, $alias;
 
     $dosum = $mybb->settings['diceroller_enable_sum'];
 
     // Extract information from matches
-	$number = $matches[2];
-	$sides = $matches[3];
-	$offset = $matches[4];
-	$dice = $number . 'd' . $sides . $offset;
+    $number = $matches[2];
+    $sides = $matches[3];
+    $offset = isset($matches[4]) ? $matches[4] : null; // Check if matches[4] is set
+    $dice = $number . 'd' . $sides . ($offset !== null ? $offset : '');
 
     // Explode resource setting
     $key = $alias ? $alias : $dice;
@@ -403,11 +403,13 @@ function parse_nds_callback($matches) {
     $remove_dice = explode("\n", $mybb->settings['diceroller_remove_dice']);
 
     // Default number to 1
-	if (!$number) $number = 1;
+    if (!$number) $number = 1;
 
     // Roll dice $number times
-	$rolled = array();
-	for ($i = 0; $i < $number; $i++) {
+    $rolled = array();
+    $rolls = '';
+    $resources = '';
+    for ($i = 0; $i < $number; $i++) {
         $roll = rand(1, intval($sides));
         if ($remove_dice and $number <= $sides) {
             while (in_array($roll, $rolled)) {
@@ -415,7 +417,7 @@ function parse_nds_callback($matches) {
             }
         }
 
-		$rolled[] = $roll;
+        $rolled[] = $roll;
 
         // Display plus sign if there are additional rolls
         if ($i < $number-1) {
@@ -423,40 +425,48 @@ function parse_nds_callback($matches) {
         } else {
             $plus = '';
         }
+		
+		// Explode resource setting
+		$key = $alias ? $alias : $dice;
+		$resourcesetting = get_setting_value('diceroller_resources', $key);
+		$resourcelist = array(); // Initialize resourcelist to an empty array.
+		if ($resourcesetting) $resourcelist = explode(',', $resourcesetting);
 
         // Get resource items
-        if ($resourcelist) {
-            $resource = $resourcelist[$roll-1];
-            eval('$resources .= "' . str_replace("\n", " ", $templates->get('diceroller_resource')) . '";');
-        }
+        if ($resourcelist) { 
+			$resource = $resourcelist[$roll-1];
+			eval('$resources .= "' . str_replace("\n", " ", $templates->get('diceroller_resource')) . '";');
+		}
 
         eval('$rolls .= "' . str_replace("\n", " ", $templates->get('diceroller_roll')) . '";');
-	}
+    }
 
     // Calculate sum
+    $sum = null; // Initialize sum to null
     if ($dosum) {
-    	if ($number > 1 or $offset) {
-    		$sum = array_sum($rolled);
+        if ($number > 1 || $offset !== null) { // Check if offset is not null
+            $sum = array_sum($rolled);
 
-        	if ($offset) {
-        		$sum += $offset;
-        	}
-    	}
+            if ($offset !== null) { // Check if offset is not null
+                $sum += $offset;
+            }
+        }
     }
 
     // Get result messages
-    $num = $sum ? $sum : $rolled[0];
+    $num = ($sum !== null) ? $sum : $rolled[0]; // Check if sum is not null
     $resultlist = get_result_message($key, $num);
+    $results = '';
     foreach ($resultlist as $result) {
         eval('$results .= "' . str_replace("\n", " ", $templates->get('diceroller_result')) . '";');
     }
 
     // Evaluate templates
-    if ($sum != null) {
-        eval('$sum  = "' . str_replace("\n", " ", $templates->get('diceroller_sum')) . '";');
+    if ($sum !== null) { // Check if sum is not null
+        eval('$sum = "' . str_replace("\n", " ", $templates->get('diceroller_sum')) . '";');
     }
-	eval('$diceroller  = "' . str_replace("\n", " ", $templates->get('diceroller')) . '";');
-	return $diceroller;
+    eval('$diceroller = "' . str_replace("\n", " ", $templates->get('diceroller')) . '";');
+    return $diceroller;
 }
 
 /**
@@ -564,7 +574,17 @@ function explode_settings($name) {
     $settings = explode("\n", $settings);
     foreach ($settings as $key => $value) {
         $explosion = explode('=', $value);
-        $settings[$explosion[0]] = $explosion[1];
+        if (count($explosion) >= 2) {
+            $settings[$explosion[0]] = $explosion[1];
+        } else {
+            // Handle the case where there is no '='
+            // You might want to log a warning, skip the line,
+            // or assign a default value.
+            // Example:
+            if(isset($explosion[0])){
+                $settings[$explosion[0]] = ''; // Assign an empty string as value
+            }
+        }
         unset($settings[$key]);
     }
 
